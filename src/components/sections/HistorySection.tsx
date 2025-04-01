@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +9,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { format } from 'date-fns';
-import { toast } from '@/components/ui/sonner';
+import { toast } from "sonner";
 
 interface Prediction {
   condition: string;
@@ -31,7 +30,6 @@ const HistorySection = () => {
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    // Get history from local storage
     const savedHistory = JSON.parse(localStorage.getItem('predictionHistory') || '[]');
     setHistory(savedHistory);
   }, []);
