@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,7 +55,25 @@ const PredictionSection = () => {
 
     setIsLoading(true);
     
-    // Mock API call delay and response
+    // In a production environment, this would be replaced with an actual API call 
+    // to a Django backend that uses the Kaggle disease prediction dataset
+    // Example API call:
+    // try {
+    //   const response = await fetch('/api/predict', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({ symptoms: selectedSymptoms }),
+    //   });
+    //   const data = await response.json();
+    //   setPredictions(data.predictions);
+    // } catch (error) {
+    //   console.error('Error:', error);
+    //   toast.error("Failed to get predictions");
+    // }
+
+    // Mock API call delay and response for development
     setTimeout(() => {
       // Mock predictions based on symptoms
       const mockPredictions: Prediction[] = [];
