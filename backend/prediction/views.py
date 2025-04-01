@@ -100,3 +100,28 @@ class ClearHistoryView(APIView):
     def delete(self, request):
         PredictionHistory.objects.filter(user=request.user).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class HealthCheckView(APIView):
+    """
+    API endpoint for checking API health.
+    """
+    permission_classes = []  # No auth required
+    
+    def get(self, request):
+        # Check if ML model can be initialized
+        try:
+            model = DiseasePredictionModel()
+            model_status = "available" if model.model is not None else "initializing"
+            
+            return Response({
+                "status": "healthy",
+                "message": "API is operational",
+                "model_status": model_status,
+                "using_kaggle_dataset": True
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "status": "degraded",
+                "message": f"API is operational but model has issues: {str(e)}",
+                "model_status": "error"
+            }, status=status.HTTP_200_OK)

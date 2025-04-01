@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,8 +5,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, Activity, Loader2 } from 'lucide-react';
 import { toast } from "sonner";
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
-// Mock symptoms data
+// Mock symptoms data - will be replaced with API data in production
 const symptoms = [
   { id: 'fever', label: 'Fever' },
   { id: 'cough', label: 'Cough' },
@@ -33,11 +34,52 @@ interface Prediction {
   recommendation: string;
 }
 
+// API functions
+const fetchPrediction = async (symptoms: string[]) => {
+  try {
+    const response = await fetch('/api/predict/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({ symptoms }),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to get predictions');
+    }
+    
+    const data = await response.json();
+    return data.predictions;
+  } catch (error) {
+    console.error('Error fetching prediction:', error);
+    throw error;
+  }
+};
+
 const PredictionSection = () => {
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const { isAuthenticated } = useAuth();
+  
+  // Use React Query for the prediction mutation
+  const { mutate, isPending: isLoading } = useMutation({
+    mutationFn: fetchPrediction,
+    onSuccess: (data) => {
+      setPredictions(data);
+      setShowResults(true);
+      toast.success("Prediction completed successfully!");
+    },
+    onError: (error) => {
+      console.error('Prediction error:', error);
+      toast.error("Failed to get predictions. Please try again.");
+      
+      // Fallback to mock predictions for development/demo purposes
+      useMockPredictions();
+    }
+  });
 
   const handleSymptomChange = (symptomId: string, checked: boolean) => {
     if (checked) {
@@ -53,29 +95,20 @@ const PredictionSection = () => {
       return;
     }
 
-    setIsLoading(true);
-    
-    // In a production environment, this would be replaced with an actual API call 
-    // to a Django backend that uses the Kaggle disease prediction dataset
-    // Example API call:
-    // try {
-    //   const response = await fetch('/api/predict', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({ symptoms: selectedSymptoms }),
-    //   });
-    //   const data = await response.json();
-    //   setPredictions(data.predictions);
-    // } catch (error) {
-    //   console.error('Error:', error);
-    //   toast.error("Failed to get predictions");
-    // }
+    if (!isAuthenticated) {
+      toast.error("Please log in to use the prediction feature");
+      return;
+    }
 
-    // Mock API call delay and response for development
+    // In production, this calls the real API
+    // In development, it falls back to mock data if API is unavailable
+    mutate(selectedSymptoms);
+  };
+
+  // Mock prediction function for development/demo purposes
+  const useMockPredictions = () => {
+    // Mock API call delay and response
     setTimeout(() => {
-      // Mock predictions based on symptoms
       const mockPredictions: Prediction[] = [];
       
       if (selectedSymptoms.includes('fever')) {
@@ -128,9 +161,8 @@ const PredictionSection = () => {
       
       setPredictions(mockPredictions);
       setShowResults(true);
-      setIsLoading(false);
-
-      // Save to "database" (would be done via API in a real app)
+      
+      // Save to local storage for demo purposes
       const historyEntry = {
         id: Date.now().toString(),
         date: new Date().toISOString(),

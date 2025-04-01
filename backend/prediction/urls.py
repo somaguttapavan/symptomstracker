@@ -4,7 +4,8 @@ from .views import (
     PredictDiseaseView, 
     PredictionHistoryView,
     DeleteHistoryView,
-    ClearHistoryView
+    ClearHistoryView,
+    HealthCheckView
 )
 
 urlpatterns = [
@@ -12,4 +13,5 @@ urlpatterns = [
     path('history/', PredictionHistoryView.as_view(), name='history'),
     path('history/<int:history_id>/', DeleteHistoryView.as_view(), name='delete-history'),
     path('history/clear/', ClearHistoryView.as_view(), name='clear-history'),
+    path('health/', HealthCheckView.as_view(), name='health-check'),
 ]
